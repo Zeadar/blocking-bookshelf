@@ -2,6 +2,11 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <stdio.h>
+#include "libmemhandle/libmemhandle.h"
+
+void handle_addrs(char *addr) {
+    printf("addr: %s\n", addr);
+}
 
 const char *domain = "youtube.com";
 
@@ -14,10 +19,13 @@ int main() {
     }
 
     addr_list = (struct in_addr **) he->h_addr_list;
-    printf("%lu\n", sizeof addr_list);
-    printf("%s\n", he->h_name);
+    printf("h_name: %s\nh_length: %d\n", he->h_name, he->h_length);
 
-    for (int i = 0; i != he->h_length; ++i) {
-        printf("%s\n", inet_ntoa(*addr_list[i]));
+    Sarray addresses = sarray_create();
+    for (int i = 0; addr_list[i]; ++i) {
+        char *str = inet_ntoa(*addr_list[i]);
+        sarray_push(&addresses, str);
     }
+    sarray_foreach(&addresses, handle_addrs);
+    sarray_destroy(&addresses);
 }
