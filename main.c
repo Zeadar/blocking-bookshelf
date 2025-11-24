@@ -10,6 +10,11 @@ void handle_addrs(char *key, void *value) {
     printf("Type: %d, Addr: %s\n", *addr_type, key);
 }
 
+void destroy_block_unit(void *block_unit) {
+    BlockUnit *bu = block_unit;
+    sarray_destroy(&bu->domains);
+}
+
 void print_domains(char *line) {
     printf("%s\n", line);
 }
@@ -51,7 +56,7 @@ int main() {
         }
     }
 
-    // sarray_destroy(domains);
+    slice_foreach(&block_units, destroy_block_unit);
     slice_destroy(&block_units);
 
     return 0;
