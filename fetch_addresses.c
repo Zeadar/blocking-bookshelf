@@ -1,4 +1,5 @@
 #include "blocktimer.h"
+#include "libmemhandle/libmemhandle.h"
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
@@ -20,6 +21,8 @@ MapResult fetch_addresses(Sarray *domains) {
         int status = getaddrinfo(domain, 0, &hints, &response);
 
         if (status != 0) {
+            hashy_destroy(&mapres.mapresult.map);
+
             if (status == EAI_AGAIN) {
                 mapres.result.status = ERROR_ADDRINFO_TEMPORARY;
                 mapres.result.comment = gai_strerror(status);
@@ -41,9 +44,9 @@ MapResult fetch_addresses(Sarray *domains) {
                 hashy_set(&mapres.mapresult.map, ipstr_buf,
                           &r_ptr->ai_family);
             } else {
-                struct sockaddr_in *ipv6 =
-                    (struct sockaddr_in *) r_ptr->ai_addr;
-                inet_ntop(r_ptr->ai_family, &ipv6->sin_addr, ipstr_buf,
+                struct sockaddr_in6 *ipv6 =
+                    (struct sockaddr_in6 *) r_ptr->ai_addr;
+                inet_ntop(r_ptr->ai_family, &ipv6->sin6_addr, ipstr_buf,
                           INET6_ADDRSTRLEN);
 
                 hashy_set(&mapres.mapresult.map, ipstr_buf,
