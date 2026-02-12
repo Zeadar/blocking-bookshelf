@@ -51,6 +51,9 @@ void handle_errors(const struct result *result, enum status expect) {
     case ERROR_CONF_PARSE_TIME:
         fprintf(stderr, "Time format wrong:\n%s\n", result->comment);
         exit(ERROR_CODE_CONF);
+    case ERROR_CONF_SAME_TIME:
+        fprintf(stderr, "%s\n", result->comment);
+        exit(ERROR_CODE_CONF);
     default:
         fprintf(stderr, "Status not covered: %d\n%s\n", result->status,
                 result->comment);
