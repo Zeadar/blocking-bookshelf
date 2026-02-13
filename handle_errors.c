@@ -6,6 +6,7 @@
 #define ERROR_CODE_ADDRINFO 2
 #define ERROR_CODE_DBUS 3
 #define ERROR_CODE_CONF 4
+#define ERROR_CODE_GENERIC 5
 
 void handle_errors(const struct result *result, enum status expect) {
     if (result->status == expect)
@@ -15,10 +16,10 @@ void handle_errors(const struct result *result, enum status expect) {
             result->status);
 
     switch (result->status) {
-    case ERROR_ADDRINFO_TEMPORARY:
-        fprintf(stderr, "%s\n", result->comment);
-        // No exit. Error is not fatal. Handled elsewhere.
-        break;
+        // case ERROR_ADDRINFO_TEMPORARY:
+        //     fprintf(stderr, "%s\n", result->comment);
+        //     // No exit. Error is not fatal. Handled elsewhere.
+        //     break;
     case ERROR_ADDRINFO:
         fprintf(stderr, "Error fetching addresses:\n%s\n",
                 result->comment);
@@ -51,9 +52,9 @@ void handle_errors(const struct result *result, enum status expect) {
     case ERROR_CONF_PARSE_TIME:
         fprintf(stderr, "Time format wrong:\n%s\n", result->comment);
         exit(ERROR_CODE_CONF);
-    case ERROR_CONF_SAME_TIME:
+    case ERROR_GENERIC:
         fprintf(stderr, "%s\n", result->comment);
-        exit(ERROR_CODE_CONF);
+        exit(ERROR_CODE_GENERIC);
     default:
         fprintf(stderr, "Status not covered: %d\n%s\n", result->status,
                 result->comment);

@@ -1,11 +1,6 @@
-#pragma once
+#pragma  once
 #include "libmemhandle/libmemhandle.h"
 #include <pthread.h>
-
-enum event_type {
-    START,
-    STOP,
-};
 
 enum status {
     OK_GENERIC,
@@ -15,6 +10,7 @@ enum status {
     OK_TYPE_START,
     OK_TYPE_STOP,
     OK_TYPE_DOMAIN,
+    ERROR_GENERIC,
     ERROR_ADDRINFO_TEMPORARY,
     ERROR_ADDRINFO,
     ERROR_DBUS_CONNECTION,
@@ -36,14 +32,8 @@ struct block_unit {
 
 struct event_unit {
     Map addresses;
-    int time;
-    int days;
-    enum event_type type;
-};
-
-struct thrd_data {
-    pthread_t *thrd_id;
-    Slice *domains;
+    pthread_t thread;
+    struct block_unit *block_unit;
 };
 
 struct result {
@@ -84,8 +74,11 @@ typedef union {
     struct mapresult mapresult;
 } MapResult;
 
-
 MapResult fetch_addresses(Sarray *domains);
 struct result wait_for_wakeup();
 SliceResult parse_config();
 void handle_errors(const struct result *result, enum status expect);
+struct result add(struct event_unit *eu);
+struct result del(struct event_unit *eu);
+
+extern int is_not_root;

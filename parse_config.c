@@ -168,7 +168,7 @@ SliceResult parse_config() {
     free(buf);
 
     if (blocklist->start == blocklist->stop) {
-        sr.result.status = ERROR_CONF_SAME_TIME;
+        sr.result.status = ERROR_GENERIC;
         sr.result.comment = "start time and stop time is the same";
     }
 
