@@ -92,7 +92,8 @@ void destroy_domains_in_block_units(void *bu) {
 
 void destroy_addresses_in_block_events(void *eu) {
     struct event_unit *event_unit = eu;
-    hashy_destroy(&event_unit->addresses);
+    if (event_unit->addresses.map)
+        hashy_destroy(&event_unit->addresses);
 }
 
 void cancel_threads(void *eu) {
