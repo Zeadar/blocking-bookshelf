@@ -16,6 +16,7 @@
 Slice block_units;
 Slice event_units;
 int is_not_root;
+pthread_mutex_t addr_lock;
 
 void *scheduler(void *eu) {
     struct event_unit *event_unit = eu;
@@ -72,9 +73,10 @@ void *scheduler(void *eu) {
                 sleep_time = event_unit->block_unit->start - now;
             }
         }
-        // printf("Sleeping for %.2d:%.2d:%.2d\n",
-        //        sleep_time / 60 / 60,
-        //        (sleep_time / 60) % 60, (sleep_time % 60) % 60);
+        if (is_not_root)
+            printf("Sleeping for %.2d:%.2d:%.2d\n",
+                   sleep_time / 60 / 60,
+                   (sleep_time / 60) % 60, (sleep_time % 60) % 60);
         sleep(sleep_time);
     }
 }
@@ -99,6 +101,7 @@ void destroy_addresses_in_event_units(void *eu) {
 void cancel_threads(void *eu) {
     struct event_unit *event_unit = eu;
     pthread_cancel(event_unit->thread);
+    pthread_join(event_unit->thread, 0);
 }
 
 void create_threads(void *eu) {
@@ -108,7 +111,6 @@ void create_threads(void *eu) {
 
 void exit_handler(int sig) {
     printf("Recieved signal %d, exiting...\n", sig);
-    // printf("%ld\n", slice_size(&event_units));
     slice_foreach(&event_units, cancel_threads);
     // clear firewall
     for (slice_index si = 0; si != slice_size(&event_units); ++si) {
@@ -119,6 +121,7 @@ void exit_handler(int sig) {
     slice_destroy(&event_units);
     slice_foreach(&block_units, destroy_domains_in_block_units);
     slice_destroy(&block_units);
+    pthread_mutex_destroy(&addr_lock);
     exit(0);
 }
 
@@ -142,6 +145,8 @@ int main() {
     sigaction(SIGTERM, &sa, 0);
 
     slice_foreach(&block_units, init_and_link_events_to_blocks);
+
+    pthread_mutex_init(&addr_lock, 0);
 
     // debug
     // for (slice_index si = 0; si != slice_size(&config.sliceresult.slice);
