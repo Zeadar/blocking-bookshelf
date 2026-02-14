@@ -12,8 +12,11 @@
 #define START_EXPR "start="
 #define STOP_EXPR "stop="
 #define DOMAIN_EXPR "domain="
+#define NEWBLOCK_EXPR "[block]"
 
-ptrdiff_t strip_fluff(char *line) {
+#define NOBLOCK_COMMENT ""
+
+static ptrdiff_t strip_fluff(char *line) {
     char *read = line, *write = line;
 
     while (*read != '\0') {
@@ -36,7 +39,7 @@ ptrdiff_t strip_fluff(char *line) {
     return write - line;
 }
 
-struct result get_type(char **buf) {
+static struct result get_type(char **buf) {
     char *buffer = *buf;
     unsigned len;
     struct result r = { 0 };
@@ -51,6 +54,9 @@ struct result get_type(char **buf) {
                0) {
         r.status = OK_TYPE_DOMAIN;
         *buf = buffer + len;
+    } else if (strncmp(buffer, NEWBLOCK_EXPR, len = strlen(NEWBLOCK_EXPR))
+               == 0) {
+        r.status = OK_TYPE_NEWBLOCK;
     } else {
         r.status = ERROR_CONF_PARSE;
         char *err = malloc(strlen(buffer) + 50);
@@ -63,7 +69,7 @@ struct result get_type(char **buf) {
 
 #define ERROR_TIME_PARSE_MSG "Expected time format HH:MM 24 hour"
 #define ERROR_TIME_PARSE_NONUMBER "Contains non-numericals."
-IntResult parse_time(const char *buf) {
+static IntResult parse_time(const char *buf) {
     char splitbuf[6];
     IntResult ir = { 0 };
     ir.status = OK_INT;
@@ -107,8 +113,8 @@ IntResult parse_time(const char *buf) {
     }
 
     ir.intresult.num = 0;
-    ir.intresult.num += 60 * 60 * atoi(hstr);
     ir.intresult.num += 60 * atoi(mstr);
+    ir.intresult.num += 60 * 60 * atoi(hstr);
 
     return ir;
 }
@@ -132,9 +138,7 @@ SliceResult parse_config() {
         sr.result.comment = buf;
         return sr;
     }
-    // TODO: rework for for additional blocklists
-    struct block_unit *blocklist = slice_allocate(&sr.sliceresult.slice);
-    blocklist->domains = sarray_create();
+    struct block_unit *blocklist = 0;
 
     while ((n = getline(&buf, &buf_size, config)) != EOF) {
         if ((n = strip_fluff(buf) == 0))
@@ -143,6 +147,20 @@ SliceResult parse_config() {
         char *temp_buf = buf;
         IntResult ir;
         struct result r = get_type(&temp_buf);  // get_type will change buf
+
+        if (r.status == OK_TYPE_NEWBLOCK) {
+            blocklist = slice_allocate(&sr.sliceresult.slice);
+            *blocklist = (const struct block_unit) { 0 };
+            blocklist->domains = sarray_create();
+            continue;
+        }
+
+        if (!blocklist) {
+            r.status = ERROR_GENERIC;
+            r.comment =
+                "Need at least one [block] line before anything else in config\n";
+            return (SliceResult) r;
+        }
 
         switch (r.status) {
         case OK_TYPE_START:
