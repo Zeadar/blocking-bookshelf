@@ -18,6 +18,37 @@ Slice event_units;
 int is_not_root;
 pthread_mutex_t addr_lock;
 
+int skipcheck(const struct tm *today, const struct skipdays *skip) {
+    switch (today->tm_wday) {
+    case 0:
+        return skip->sunday;
+    case 1:
+        return skip->monday;
+    case 2:
+        return skip->tuesday;
+    case 3:
+        return skip->wednesday;
+    case 4:
+        return skip->thursday;
+    case 5:
+        return skip->friday;
+    case 6:
+        return skip->saturday;
+    default:
+        return 0;
+    }
+}
+
+void sleep_announce(const Sarray *domains, int sleep_time) {
+    printf("{\n");
+    for (slice_index si = 0; si != sarray_size(domains); ++si)
+        printf("\t%s\n", sarray_get(domains, si));
+    printf("\tSleeping for %.2d:%.2d:%.2d\n",
+           sleep_time / 60 / 60,
+           (sleep_time / 60) % 60, (sleep_time % 60) % 60);
+    printf("}\n");
+}
+
 void *scheduler(void *eu) {
     struct event_unit *event_unit = eu;
     time_t now_epoch;
@@ -30,6 +61,18 @@ void *scheduler(void *eu) {
         now_epoch = time(0);
         localtime_r(&now_epoch, &today);
         now = today.tm_hour * 3600 + today.tm_min * 60 + today.tm_sec;
+
+        if (skipcheck(&today, &event_unit->block_unit->days)) {
+            sleep_time = (DAY_SEC) - now + event_unit->block_unit->start;
+            if (is_not_root) {
+                printf("Skipping the following block today:\n");
+                sleep_announce(&event_unit->block_unit->domains,
+                               sleep_time);
+            }
+            sleep(sleep_time);
+            continue;
+        }
+
         if (event_unit->block_unit->start < event_unit->block_unit->stop) {     // withing the day
             if (event_unit->block_unit->start <= now && event_unit->block_unit->stop > now) {   // on
                 r = add(event_unit);
@@ -88,9 +131,8 @@ void *scheduler(void *eu) {
                 sleep_time = event_unit->block_unit->start - now;
         }
         if (is_not_root)
-            printf("Sleeping for %.2d:%.2d:%.2d\n",
-                   sleep_time / 60 / 60,
-                   (sleep_time / 60) % 60, (sleep_time % 60) % 60);
+            sleep_announce(&event_unit->block_unit->domains, sleep_time);
+
         sleep(sleep_time);
     }
 }

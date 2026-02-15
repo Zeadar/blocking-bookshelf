@@ -9,12 +9,11 @@
 #define LOCAL_CONF_NAME "./block.conf"
 #define FULL_PATH_NAME "/etc/blocktimer/block.conf"
 
+#define NEWBLOCK_EXPR "[block]"
 #define START_EXPR "start="
 #define STOP_EXPR "stop="
 #define DOMAIN_EXPR "domain="
-#define NEWBLOCK_EXPR "[block]"
-
-#define NOBLOCK_COMMENT ""
+#define SKIP_EXPR "skipdays="
 
 static ptrdiff_t strip_fluff(char *line) {
     char *read = line, *write = line;
@@ -57,6 +56,9 @@ static struct result get_type(char **buf) {
     } else if (strncmp(buffer, NEWBLOCK_EXPR, len = strlen(NEWBLOCK_EXPR))
                == 0) {
         r.status = OK_TYPE_NEWBLOCK;
+    } else if (strncmp(buffer, SKIP_EXPR, len = strlen(SKIP_EXPR)) == 0) {
+        r.status = OK_TYPE_SKIP;
+        *buf = buffer + len;
     } else {
         r.status = ERROR_CONF_PARSE;
         char *err = malloc(strlen(buffer) + 50);
@@ -119,6 +121,38 @@ static IntResult parse_time(const char *buf) {
     return ir;
 }
 
+static struct skipdays parse_days(char *buf) {
+    struct skipdays days = { 0 };
+
+    for (char *read = buf; *read != '\0'; ++read) {
+        switch (*read) {
+        case '1':
+            days.monday = ~0;
+            break;
+        case '2':
+            days.tuesday = ~0;
+            break;
+        case '3':
+            days.wednesday = ~0;
+            break;
+        case '4':
+            days.thursday = ~0;
+            break;
+        case '5':
+            days.friday = ~0;
+            break;
+        case '6':
+            days.saturday = ~0;
+            break;
+        case '7':
+            days.sunday = ~0;
+            break;
+        }
+    }
+
+    return days;
+}
+
 SliceResult parse_config() {
     FILE *config = fopen(LOCAL_CONF_NAME, "r");
     if (config == 0)
@@ -175,6 +209,9 @@ SliceResult parse_config() {
             break;
         case OK_TYPE_DOMAIN:
             sarray_push(&blocklist->domains, temp_buf);
+            break;
+        case OK_TYPE_SKIP:
+            blocklist->days = parse_days(temp_buf);
             break;
         default:
             sr = (SliceResult) r;

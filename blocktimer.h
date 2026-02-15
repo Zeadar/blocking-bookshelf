@@ -11,6 +11,7 @@ enum status {
     OK_TYPE_STOP,
     OK_TYPE_DOMAIN,
     OK_TYPE_NEWBLOCK,
+    OK_TYPE_SKIP,
     ERROR_GENERIC,
     ERROR_ADDRINFO_TEMPORARY,
     ERROR_ADDRINFO,
@@ -24,11 +25,21 @@ enum status {
     ERROR_CONF_PARSE_TIME,
 };
 
+struct skipdays {
+    unsigned char monday;
+    unsigned char tuesday;
+    unsigned char wednesday;
+    unsigned char thursday;
+    unsigned char friday;
+    unsigned char saturday;
+    unsigned char sunday;
+};
+
 struct block_unit {
     Sarray domains;
     int start;
     int stop;
-    int days;
+    struct skipdays days;
 };
 
 struct event_unit {
