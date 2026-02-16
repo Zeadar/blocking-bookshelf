@@ -63,9 +63,10 @@ void *scheduler(void *eu) {
         now = today.tm_hour * 3600 + today.tm_min * 60 + today.tm_sec;
 
         if (skipcheck(&today, &event_unit->block_unit->days)) {
-            sleep_time = (DAY_SEC) - now + event_unit->block_unit->start;
+            del(event_unit);
+            sleep_time = (DAY_SEC) - now;
             if (is_not_root) {
-                printf("Skipping the following block today:\n");
+                printf("Skipping checks for the following block today:\n");
                 sleep_announce(&event_unit->block_unit->domains,
                                sleep_time);
             }
@@ -85,8 +86,9 @@ void *scheduler(void *eu) {
                 sleep_time = event_unit->block_unit->stop - now;
             } else if (event_unit->block_unit->stop <= now) {   // off
                 del(event_unit);
-                sleep_time =
-                    (DAY_SEC - now) + event_unit->block_unit->start;
+                // sleep_time =
+                //     (DAY_SEC - now) + event_unit->block_unit->start;
+                sleep_time = DAY_SEC - now;
             } else {            // off
                 del(event_unit);
                 sleep_time = event_unit->block_unit->start - now;
@@ -109,8 +111,9 @@ void *scheduler(void *eu) {
                     continue;
                 }
                 handle_errors(&r, OK_GENERIC);
-                sleep_time =
-                    (DAY_SEC - now) + event_unit->block_unit->stop;
+                // sleep_time =
+                //     (DAY_SEC - now) + event_unit->block_unit->stop;
+                sleep_time = DAY_SEC - now;
             } else {
                 del(event_unit);
                 sleep_time = event_unit->block_unit->start - now;
@@ -125,8 +128,9 @@ void *scheduler(void *eu) {
             }
             handle_errors(&r, OK_GENERIC);
             if (event_unit->block_unit->start < now)
-                sleep_time =
-                    (DAY_SEC - now) + event_unit->block_unit->start;
+                // sleep_time =
+                //     (DAY_SEC - now) + event_unit->block_unit->start;
+                sleep_time = DAY_SEC - now;
             else
                 sleep_time = event_unit->block_unit->start - now;
         }
@@ -173,11 +177,12 @@ void exit_handler(int sig) {
         struct event_unit *eu = slice_get_ptr(&event_units, si);
         del(eu);
     }
-    slice_foreach(&event_units, destroy_addresses_in_event_units);
-    slice_destroy(&event_units);
-    slice_foreach(&block_units, destroy_domains_in_block_units);
-    slice_destroy(&block_units);
-    pthread_mutex_destroy(&addr_lock);
+    // Uncomment ↓ to impress valgrind
+    // slice_foreach(&event_units, destroy_addresses_in_event_units);
+    // slice_destroy(&event_units);
+    // slice_foreach(&block_units, destroy_domains_in_block_units);
+    // slice_destroy(&block_units);
+    // pthread_mutex_destroy(&addr_lock);
     exit(0);
 }
 

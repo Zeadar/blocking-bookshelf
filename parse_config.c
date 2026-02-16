@@ -12,7 +12,7 @@
 #define NEWBLOCK_EXPR "[block]"
 #define START_EXPR "start="
 #define STOP_EXPR "stop="
-#define DOMAIN_EXPR "domain="
+#define DOMAIN_EXPR "domain+="
 #define SKIP_EXPR "skipdays="
 
 static ptrdiff_t strip_fluff(char *line) {
