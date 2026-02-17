@@ -1,3 +1,4 @@
+
 project(
   'blocktimer',
   'c',
@@ -7,6 +8,10 @@ project(
     'c_std=gnu11'
   ]
 )
+
+if get_option('buildtype') == 'debug'
+  add_project_arguments('-DDEBUGBUILD', language: 'c')
+endif
 
 subdir('src')
 
