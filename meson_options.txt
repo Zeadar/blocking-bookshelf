@@ -11,3 +11,10 @@ option(
   value: true,
   description: 'Install systemd service file if available'
 )
+
+option(
+  'conf',
+  type: 'boolean',
+  value: false,
+  description: 'Copy conf file'
+)

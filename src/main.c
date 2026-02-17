@@ -170,6 +170,7 @@ void create_threads(void *eu) {
 }
 
 void exit_handler(int sig) {
+    int ret;
     printf("Recieved signal %d, exiting...\n", sig);
     pthread_mutex_lock(&addr_lock);
     slice_foreach(&event_units, cancel_threads);
@@ -179,6 +180,28 @@ void exit_handler(int sig) {
         struct event_unit *eu = slice_get_ptr(&event_units, si);
         del(eu);
     }
+
+    if (is_not_root)
+        exit(0);
+
+    ret = system("iptables -D OUTPUT -j blocktimer");
+    if (ret != 0)
+        exit(ret);
+    ret = system("iptables -F blocktimer");
+    if (ret != 0)
+        exit(ret);
+    ret = system("iptables -X blocktimer");
+    if (ret != 0)
+        exit(ret);
+    ret = system("ip6tables -D OUTPUT -j blocktimer");
+    if (ret != 0)
+        exit(ret);
+    ret = system("ip6tables -F blocktimer");
+    if (ret != 0)
+        exit(ret);
+    ret = system("ip6tables -X blocktimer");
+    if (ret != 0)
+        exit(ret);
     // Uncomment ↓ to impress valgrind
     // slice_foreach(&event_units, destroy_addresses_in_event_units);
     // slice_destroy(&event_units);
@@ -194,6 +217,7 @@ int main() {
     event_units = slice_new(struct event_unit);
     struct result wait_result = { 0 };
     SliceResult config = parse_config();
+    int sysret;
 
     if (is_not_root)
         printf(NOT_ROOT_WARNING);
@@ -211,6 +235,20 @@ int main() {
 
     pthread_mutex_init(&addr_lock, 0);
 
+    if (!is_not_root) {
+        sysret = system("iptables -N blocktimer");
+        if (sysret != 0)
+            return sysret;
+        sysret = system("iptables -I OUTPUT 1 -j blocktimer");
+        if (sysret != 0)
+            return sysret;
+        sysret = system("ip6tables -N blocktimer");
+        if (sysret != 0)
+            return sysret;
+        sysret = system("ip6tables -I OUTPUT 1 -j blocktimer");
+        if (sysret != 0)
+            return sysret;
+    }
     // debug
     // for (slice_index si = 0; si != slice_size(&config.sliceresult.slice);
     //      ++si) {

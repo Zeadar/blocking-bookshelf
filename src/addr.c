@@ -9,8 +9,9 @@ static const char ipv6[] = "ip6tables";
 
 // static const char f_check_rule[] =
 //     "%s -C OUTPUT -d %s -j REJECT 2>/dev/null";
-static const char f_add_rule[] = "%s -A OUTPUT -d %s -j REJECT";
-static const char f_remove_rule[] = "%s -D OUTPUT -d %s -j REJECT";
+// iptables -A blocktimer -d IP -j REJECT
+static const char f_add_rule[] = "%s -A blocktimer -d %s -j REJECT";
+static const char f_remove_rule[] = "%s -D blocktimer -d %s -j REJECT";
 
 extern int is_not_root;
 extern pthread_mutex_t addr_lock;

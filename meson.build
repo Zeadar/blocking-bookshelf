@@ -12,11 +12,14 @@ subdir('src')
 
 sysconfdir = get_option('sysconfdir')
 
-install_data(
-  'block.conf',
-  install_dir: sysconfdir / 'blocktimer',
-  install_mode: 'rw-r--r--'
-)
+if get_option('conf')
+  install_data(
+    'block.conf',
+    install_dir: sysconfdir / 'blocktimer',
+    install_mode: 'rw-r--r--'
+  )
+endif
+
 
 if get_option('openrc')
   install_data(
