@@ -1,10 +1,10 @@
-#include <string.h>
-#include <time.h>
+#include "blocktimer.h"
+#include "libmemhandle/libmemhandle.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "libmemhandle/libmemhandle.h"
-#include "blocktimer.h"
+#include <string.h>
+#include <time.h>
 
 #define LOCAL_CONF_NAME "./block.conf"
 #define FULL_PATH_NAME "/etc/blocktimer/block.conf"
@@ -41,7 +41,7 @@ static ptrdiff_t strip_fluff(char *line) {
 static struct result get_type(char **buf) {
     char *buffer = *buf;
     unsigned len;
-    struct result r = { 0 };
+    struct result r = {0};
 
     if (strncmp(buffer, START_EXPR, len = strlen(START_EXPR)) == 0) {
         r.status = OK_TYPE_START;
@@ -49,12 +49,11 @@ static struct result get_type(char **buf) {
     } else if (strncmp(buffer, STOP_EXPR, len = strlen(STOP_EXPR)) == 0) {
         r.status = OK_TYPE_STOP;
         *buf = buffer + len;
-    } else if (strncmp(buffer, DOMAIN_EXPR, len = strlen(DOMAIN_EXPR)) ==
-               0) {
+    } else if (strncmp(buffer, DOMAIN_EXPR, len = strlen(DOMAIN_EXPR)) == 0) {
         r.status = OK_TYPE_DOMAIN;
         *buf = buffer + len;
-    } else if (strncmp(buffer, NEWBLOCK_EXPR, len = strlen(NEWBLOCK_EXPR))
-               == 0) {
+    } else if (strncmp(buffer, NEWBLOCK_EXPR, len = strlen(NEWBLOCK_EXPR)) ==
+               0) {
         r.status = OK_TYPE_NEWBLOCK;
     } else if (strncmp(buffer, SKIP_EXPR, len = strlen(SKIP_EXPR)) == 0) {
         r.status = OK_TYPE_SKIP;
@@ -73,7 +72,7 @@ static struct result get_type(char **buf) {
 #define ERROR_TIME_PARSE_NONUMBER "Contains non-numericals."
 static IntResult parse_time(const char *buf) {
     char splitbuf[6];
-    IntResult ir = { 0 };
+    IntResult ir = {0};
     ir.status = OK_INT;
 
     if (strlen(buf) != 5) {
@@ -122,7 +121,7 @@ static IntResult parse_time(const char *buf) {
 }
 
 static struct skipdays parse_days(char *buf) {
-    struct skipdays days = { 0 };
+    struct skipdays days = {0};
 
     for (char *read = buf; *read != '\0'; ++read) {
         switch (*read) {
@@ -153,7 +152,7 @@ static struct skipdays parse_days(char *buf) {
     return days;
 }
 
-SliceResult parse_config() {
+SliceResult parse_config(void) {
     FILE *config = fopen(LOCAL_CONF_NAME, "r");
     if (config == 0)
         config = fopen(FULL_PATH_NAME, "r");
@@ -161,7 +160,7 @@ SliceResult parse_config() {
     ptrdiff_t n;
     size_t buf_size = 4096;
     char *buf = malloc(buf_size);
-    SliceResult sr = { 0 };
+    SliceResult sr = {0};
     sr.status = OK_SLICE;
     sr.sliceresult.slice = slice_new(struct block_unit);
 
@@ -180,20 +179,20 @@ SliceResult parse_config() {
 
         char *temp_buf = buf;
         IntResult ir;
-        struct result r = get_type(&temp_buf);  // get_type will change buf
+        struct result r = get_type(&temp_buf); // get_type will change buf
 
         if (r.status == OK_TYPE_NEWBLOCK) {
             blocklist = slice_allocate(&sr.sliceresult.slice);
-            *blocklist = (const struct block_unit) { 0 };
+            *blocklist = (const struct block_unit) {0};
             blocklist->domains = sarray_create();
             continue;
         }
 
         if (!blocklist) {
-            r.status = ERROR_GENERIC;
-            r.comment =
-                "Need at least one [block] line before anything else in config\n";
-            return (SliceResult) r;
+            sr.result.status = ERROR_GENERIC;
+            sr.result.comment = "Need at least one [block] line before "
+                                "anything else in config\n";
+            return sr;
         }
 
         switch (r.status) {
@@ -214,7 +213,7 @@ SliceResult parse_config() {
             blocklist->days = parse_days(temp_buf);
             break;
         default:
-            sr = (SliceResult) r;
+            sr.result = r;
             return sr;
         }
     }

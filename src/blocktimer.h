@@ -87,11 +87,19 @@ typedef union {
 } MapResult;
 
 MapResult fetch_addresses(Sarray *domains);
-struct result wait_for_wakeup();
-SliceResult parse_config();
+struct result wait_for_wakeup(void);
+SliceResult parse_config(void);
 void handle_errors(const struct result *result, enum status expect);
 struct result add(struct event_unit *eu);
 void del(struct event_unit *eu);
 
-extern int is_not_root;
+#ifdef DEBUGBUILD
+void command_log_debug(const char *command, const int line, const char * filename);
+#define command_log(str) command_log_debug(str, __LINE__, __FILE_NAME__)
+#else
+void command_log_debug(const char *command);
+#define command_log(str) command_log_debug(str)
+#endif
+
 extern pthread_mutex_t addr_lock;
+extern int is_not_root;

@@ -24,6 +24,7 @@ sources = [
   'parse_config.c',
   'waitforwakeup.c',
   'fetch_addresses.c',
+  'debug.c',
   'main.c',
   'libmemhandle/slice.c',
   'libmemhandle/sarray.c',
@@ -36,4 +37,3 @@ executable(
   dependencies: [sdbus_dep],
   install: true
 )
-
