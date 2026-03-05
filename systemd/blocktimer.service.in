@@ -3,9 +3,8 @@ Description=Blocktimer ip block scheduler
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/blocktimer
+ExecStart=@BLOCKTIMER_BIN@
 # Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
-

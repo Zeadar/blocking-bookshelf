@@ -2,7 +2,7 @@
 
 # Description: blocktimer service to add ip addresses to firewall for blocking at scheduled times
 
-command="/usr/local/bin/blocktimer"   # adjust if your binary is elsewhere
+command="@BLOCKTIMER_BIN@"
 command_args=""
 pidfile="/var/run/blocktimer.pid"
 name="blocktimer"
@@ -27,4 +27,3 @@ stop() {
     start-stop-daemon --stop --quiet --pidfile $pidfile
     eend $?
 }
-
