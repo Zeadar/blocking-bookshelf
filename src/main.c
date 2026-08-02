@@ -73,7 +73,9 @@ void *scheduler(void *eu) {
 
         if (skipcheck(&today, &event_unit->block_unit->days)) {
             del(event_unit);
-            sleep_time = (DAY_SEC) -now;
+            // Skipping to the start of next day allows for some imaginary
+            // extension of the current day.
+            sleep_time = DAY_SEC - now + event_unit->block_unit->start;
             if (is_not_root) {
                 printf("Skipping checks for the following block today:\n");
                 sleep_announce(event_unit->block_unit, sleep_time);
@@ -154,7 +156,7 @@ void *scheduler(void *eu) {
 
 void init_and_link_events_to_blocks(void *bu) {
     struct event_unit *e = slice_allocate(&event_units);
-    *e = (const struct event_unit) {0};
+    *e = (const struct event_unit){0};
     e->block_unit = bu;
 }
 
