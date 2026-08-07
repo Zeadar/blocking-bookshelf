@@ -93,6 +93,8 @@ Notes:
 
 - `start == stop` means 24/7 blocking
 - `start > stop` means block spans midnight
+- On a `skipdays` match, matching firewall rules are removed and checks resume
+  at the configured `start` time on the next day
 - A `[block]` must contain at least one of: `domain`, `ipv4`, or `ipv6`
 
 Example:
